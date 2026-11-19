@@ -1,0 +1,17 @@
+# Purchase = Expense / Check / Credit-card charge.
+entity: Purchase
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: AccountRef, ref: Ref}
+  - {qbo: PaymentType, type: STRING}
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: EntityRef, ref: Ref}
+  - {qbo: RemitToAddr, ref: Address}
+  - {qbo: Credit, type: BOOL}
+  - {qbo: PrintStatus, type: STRING}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: HomeTotalAmt, type: NUMERIC}
+  - {qbo: IncludeInAnnualTPAR, type: BOOL}
+  - {qbo: Line, ref: ExpenseLine, repeated: true}
+  - {qbo: PurchaseEx, type: JSON}

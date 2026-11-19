@@ -1,0 +1,28 @@
+entity: TimeActivity
+sync: cdc
+fields:
+  - {qbo: TxnDate, type: DATE}
+  - {qbo: NameOf, type: STRING}
+  - {qbo: EmployeeRef, ref: Ref}
+  - {qbo: VendorRef, ref: Ref}
+  - {qbo: CustomerRef, ref: Ref}
+  - {qbo: ProjectRef, ref: Ref}
+  - {qbo: ItemRef, ref: Ref}
+  - {qbo: ClassRef, ref: Ref}
+  - {qbo: DepartmentRef, ref: Ref}
+  - {qbo: PayrollItemRef, ref: Ref}
+  - {qbo: TransactionLocationType, type: STRING}
+  - {qbo: BillableStatus, type: STRING}
+  - {qbo: Taxable, type: BOOL}
+  - {qbo: HourlyRate, type: NUMERIC}
+  - {qbo: CostRate, type: NUMERIC}
+  - {qbo: Hours, type: INT64}
+  - {qbo: Minutes, type: INT64}
+  - {qbo: Seconds, type: INT64}
+  - {qbo: BreakHours, type: INT64}
+  - {qbo: BreakMinutes, type: INT64}
+  - {qbo: BreakSeconds, type: INT64}
+  - {qbo: StartTime, type: TIMESTAMP}
+  - {qbo: EndTime, type: TIMESTAMP}
+  - {qbo: TimeZone, type: STRING}
+  - {qbo: Description, type: STRING}

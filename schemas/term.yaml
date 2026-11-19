@@ -1,0 +1,13 @@
+entity: Term
+sync: cdc
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: Active, type: BOOL}
+  - {qbo: Type, type: STRING}
+  - {qbo: DueDays, type: INT64}
+  - {qbo: DiscountDays, type: INT64}
+  - {qbo: DiscountPercent, type: NUMERIC}
+  - {qbo: DayOfMonthDue, type: INT64}
+  - {qbo: DiscountDayOfMonth, type: INT64}
+  - {qbo: DueNextMonthDays, type: INT64}

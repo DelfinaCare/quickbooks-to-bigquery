@@ -1,0 +1,19 @@
+entity: CompanyInfo
+sync: cdc
+fields:
+  - {qbo: CompanyName, type: STRING}
+  - {qbo: LegalName, type: STRING}
+  - {qbo: CompanyAddr, ref: Address}
+  - {qbo: CustomerCommunicationAddr, ref: Address}
+  - {qbo: LegalAddr, ref: Address}
+  - {qbo: CustomerCommunicationEmailAddr, ref: Email}
+  - {qbo: Email, ref: Email}
+  - {qbo: PrimaryPhone, ref: Phone}
+  - {qbo: WebAddr, ref: WebSite}
+  - {qbo: CompanyStartDate, type: DATE}
+  - {qbo: FiscalYearStartMonth, type: STRING}
+  - {qbo: Country, type: STRING}
+  - {qbo: SupportedLanguages, type: STRING}
+  - {qbo: DefaultTimeZone, type: STRING}
+  - {qbo: EmployerId, type: STRING}
+  - {qbo: NameValue, ref: NameValue, repeated: true}

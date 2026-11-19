@@ -1,0 +1,32 @@
+entity: Item
+sync: cdc
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: FullyQualifiedName, type: STRING}
+  - {qbo: Sku, type: STRING}
+  - {qbo: Type, type: STRING}
+  - {qbo: Active, type: BOOL}
+  - {qbo: Description, type: STRING}
+  - {qbo: PurchaseDesc, type: STRING}
+  - {qbo: SubItem, type: BOOL}
+  - {qbo: ParentRef, ref: Ref}
+  - {qbo: Level, type: INT64}
+  - {qbo: Taxable, type: BOOL}
+  - {qbo: SalesTaxIncluded, type: BOOL}
+  - {qbo: PurchaseTaxIncluded, type: BOOL}
+  - {qbo: UnitPrice, type: NUMERIC}
+  - {qbo: PurchaseCost, type: NUMERIC}
+  - {qbo: TrackQtyOnHand, type: BOOL}
+  - {qbo: QtyOnHand, type: NUMERIC}
+  - {qbo: ReorderPoint, type: NUMERIC}
+  - {qbo: InvStartDate, type: DATE}
+  - {qbo: IncomeAccountRef, ref: Ref}
+  - {qbo: ExpenseAccountRef, ref: Ref}
+  - {qbo: AssetAccountRef, ref: Ref}
+  - {qbo: SalesTaxCodeRef, ref: Ref}
+  - {qbo: PurchaseTaxCodeRef, ref: Ref}
+  - {qbo: TaxClassificationRef, ref: Ref}
+  - {qbo: ClassRef, ref: Ref}
+  - {qbo: PrefVendorRef, ref: Ref}
+  - {qbo: Source, type: STRING}

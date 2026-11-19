@@ -1,0 +1,10 @@
+entity: RefundReceipt
+sync: cdc
+include: [TxnHeader, SalesForm]
+fields:
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: PaymentRefNum, type: STRING}
+  - {qbo: PaymentType, type: STRING}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: HomeBalance, type: NUMERIC}

@@ -1,0 +1,15 @@
+entity: Bill
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: VendorRef, ref: Ref}
+  - {qbo: VendorAddr, ref: Address}
+  - {qbo: APAccountRef, ref: Ref}
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: DueDate, type: DATE}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: HomeTotalAmt, type: NUMERIC}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: HomeBalance, type: NUMERIC}
+  - {qbo: IncludeInAnnualTPAR, type: BOOL}
+  - {qbo: Line, ref: ExpenseLine, repeated: true}

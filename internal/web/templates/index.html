@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickBooks → BigQuery</title>
+<style>
+  :root { --fg:#1c2330; --muted:#667085; --line:#e4e7ec; --bg:#f7f8fa; --card:#fff; --accent:#1a6b3c; --warn:#b54708; --bad:#b42318; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#e6e8ec; --muted:#98a2b3; --line:#2b3340; --bg:#12161c; --card:#1a2029; --accent:#4cc38a; --warn:#f5a524; --bad:#f97066; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; color:var(--fg); background:var(--bg); }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between; }
+  h1 { font-size:22px; margin:0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .flash { margin:16px 0; padding:10px 14px; border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--card); border-radius:6px; }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0; }
+  a.btn, button { font:inherit; padding:7px 14px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; text-decoration:none; }
+  a.btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.danger { color:var(--bad); }
+  .scroll { overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:8px; }
+  table { border-collapse:collapse; width:100%; min-width:820px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  tr:last-child td { border-bottom:0; }
+  code { font-size:13px; }
+  .badge { display:inline-block; padding:1px 9px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid currentColor; }
+  .active { color:var(--accent); } .paused { color:var(--muted); } .needs_reauth { color:var(--bad); }
+  .err { color:var(--bad); font-size:13px; max-width:320px; overflow-wrap:anywhere; }
+  form { display:inline; }
+  .empty { padding:28px; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>QuickBooks → BigQuery</h1>
+    <span class="muted">Signed in as {{.Admin}}</span>
+  </header>
+  {{if .Flash}}<div class="flash">{{.Flash}}</div>{{end}}
+  <div class="actions">
+    {{range $i, $env := .Environments}}
+    <a class="btn{{if eq $i 0}} primary{{end}}" href="{{$.BasePath}}/connect?env={{$env}}">Connect QuickBooks ({{if eq $env "production"}}Production{{else}}Sandbox{{end}})</a>
+    {{end}}
+  </div>
+  <div class="scroll">
+  {{if .Installations}}
+  <table>
+    <thead><tr><th>Company</th><th>Environment</th><th>Status</th><th>Last sync</th><th>Re-auth needed</th><th>Last error</th><th></th></tr></thead>
+    <tbody>
+    {{range .Installations}}
+    <tr>
+      <td><strong>{{if .CompanyName}}{{.CompanyName}}{{else}}(unnamed){{end}}</strong><br><code>{{.RealmID}}</code><br><span class="muted">connected by {{.ConnectedByEmail}}</span></td>
+      <td>{{.Environment}}</td>
+      <td><span class="badge {{.Status}}">{{.Status}}</span></td>
+      <td>{{ago .LastSyncAt}}{{if .LastSyncStatus}}<br><span class="muted">{{.LastSyncStatus}}</span>{{end}}</td>
+      <td>in {{daysUntil .ReauthRequiredBy}} days<br><span class="muted">{{.ReauthRequiredBy.Format "2006-01-02"}}</span></td>
+      <td class="err">{{.LastError}}</td>
+      <td>
+        {{if ne .Status "needs_reauth"}}
+        <form method="post" action="{{$.BasePath}}/installations/{{.RealmID}}/toggle"><button>{{if eq .Status "paused"}}Resume{{else}}Pause{{end}}</button></form>
+        {{else}}
+        <a class="btn" href="{{$.BasePath}}/connect?env={{.Environment}}">Reconnect</a>
+        {{end}}
+        <form method="post" action="{{$.BasePath}}/installations/{{.RealmID}}/delete"><button class="danger">Disconnect</button></form>
+      </td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <div class="empty">No companies connected yet. Use the button above to connect one.</div>
+  {{end}}
+  </div>
+  <p class="muted">Syncs run on a schedule (Cloud Scheduler → Cloud Run job); this page only manages connections. Disconnecting keeps the data already in BigQuery.</p>
+</main>
+</body>
+</html>

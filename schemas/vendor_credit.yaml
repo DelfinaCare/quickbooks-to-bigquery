@@ -1,0 +1,11 @@
+entity: VendorCredit
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: VendorRef, ref: Ref}
+  - {qbo: VendorAddr, ref: Address}
+  - {qbo: APAccountRef, ref: Ref}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: IncludeInAnnualTPAR, type: BOOL}
+  - {qbo: Line, ref: ExpenseLine, repeated: true}

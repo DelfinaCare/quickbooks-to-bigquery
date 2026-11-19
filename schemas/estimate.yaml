@@ -1,0 +1,13 @@
+entity: Estimate
+sync: cdc
+include: [TxnHeader, SalesForm]
+fields:
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: TxnStatus, type: STRING}
+  - {qbo: ExpirationDate, type: DATE}
+  - {qbo: DueDate, type: DATE}
+  - {qbo: AcceptedBy, type: STRING}
+  - {qbo: AcceptedDate, type: DATE}
+  - {qbo: DeliveryInfo, ref: DeliveryInfo}
+  - {qbo: BillEmailCc, ref: Email}
+  - {qbo: BillEmailBcc, ref: Email}

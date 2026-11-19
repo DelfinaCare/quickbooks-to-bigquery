@@ -1,0 +1,38 @@
+entity: Customer
+sync: cdc
+include_inactive: true
+include: [Person]
+fields:
+  - {qbo: CompanyName, type: STRING}
+  - {qbo: FullyQualifiedName, type: STRING}
+  - {qbo: Fax, ref: Phone}
+  - {qbo: WebAddr, ref: WebSite}
+  - {qbo: BillAddr, ref: Address}
+  - {qbo: ShipAddr, ref: Address}
+  - {qbo: Notes, type: STRING}
+  - {qbo: Taxable, type: BOOL}
+  - {qbo: Job, type: BOOL}
+  - {qbo: IsProject, type: BOOL}
+  - {qbo: BillWithParent, type: BOOL}
+  - {qbo: ParentRef, ref: Ref}
+  - {qbo: Level, type: INT64}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: BalanceWithJobs, type: NUMERIC}
+  - {qbo: OpenBalanceDate, type: DATE}
+  - {qbo: CurrencyRef, ref: Ref}
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: CustomerTypeRef, ref: Ref}
+  - {qbo: DefaultTaxCodeRef, ref: Ref}
+  - {qbo: ARAccountRef, ref: Ref}
+  - {qbo: PreferredDeliveryMethod, type: STRING}
+  - {qbo: ResaleNum, type: STRING}
+  - {qbo: TaxExemptionReasonId, type: STRING}
+  - {qbo: PrimaryTaxIdentifier, type: STRING}
+  - {qbo: SecondaryTaxIdentifier, type: STRING}
+  - {qbo: BusinessNumber, type: STRING}
+  - {qbo: GSTIN, type: STRING}
+  - {qbo: GSTRegistrationType, type: STRING}
+  - {qbo: IsCISContractor, type: BOOL}
+  - {qbo: ClientEntityId, type: STRING}
+  - {qbo: Source, type: STRING}

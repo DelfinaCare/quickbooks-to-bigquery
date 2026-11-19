@@ -1,0 +1,8 @@
+# France-only entity. Not supported by the CDC endpoint, so always fully refreshed.
+entity: JournalCode
+sync: full
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: Type, type: STRING}
+  - {qbo: Description, type: STRING}
+  - {qbo: Active, type: BOOL}

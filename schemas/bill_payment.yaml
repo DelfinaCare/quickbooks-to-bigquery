@@ -1,0 +1,12 @@
+entity: BillPayment
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: VendorRef, ref: Ref}
+  - {qbo: APAccountRef, ref: Ref}
+  - {qbo: PayType, type: STRING}
+  - {qbo: CheckPayment, ref: CheckPayment}
+  - {qbo: CreditCardPayment, ref: CreditCardPayment}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: ProcessBillPayment, type: BOOL}
+  - {qbo: Line, ref: PaymentLine, repeated: true}

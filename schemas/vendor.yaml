@@ -1,0 +1,25 @@
+entity: Vendor
+sync: cdc
+include_inactive: true
+include: [Person]
+fields:
+  - {qbo: CompanyName, type: STRING}
+  - {qbo: Fax, ref: Phone}
+  - {qbo: WebAddr, ref: WebSite}
+  - {qbo: BillAddr, ref: Address}
+  - {qbo: AcctNum, type: STRING}
+  - {qbo: TaxIdentifier, type: STRING}
+  - {qbo: Vendor1099, type: BOOL}
+  - {qbo: T4AEligible, type: BOOL}
+  - {qbo: T5018Eligible, type: BOOL}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: BillRate, type: NUMERIC}
+  - {qbo: CostRate, type: NUMERIC}
+  - {qbo: CurrencyRef, ref: Ref}
+  - {qbo: TermRef, ref: Ref}
+  - {qbo: APAccountRef, ref: Ref}
+  - {qbo: BusinessNumber, type: STRING}
+  - {qbo: GSTIN, type: STRING}
+  - {qbo: GSTRegistrationType, type: STRING}
+  - {qbo: HasTPAR, type: BOOL}
+  - {qbo: Source, type: STRING}

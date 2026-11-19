@@ -1,0 +1,357 @@
+# Reusable nested object templates shared by the entity schemas.
+#
+# DSL cheat sheet (see README "Schema DSL" for details):
+#   - {qbo: TotalAmt, type: NUMERIC}             scalar column, BigQuery name defaults to snake_case(qbo)
+#   - {qbo: CustomerRef, ref: Ref}               nested STRUCT built from a type in this file
+#   - {qbo: Line, ref: SalesLine, repeated: true} ARRAY<STRUCT>
+#   - {qbo: LineEx, type: JSON}                  opaque value stored as a JSON-encoded STRING
+# Scalar types: STRING, NUMERIC, DATE, TIMESTAMP, BOOL, INT64, JSON.
+# Entities can pull in a whole field list with `include: [TypeName]`.
+types:
+  Ref:
+    description: QBO ReferenceType (pointer to another entity).
+    fields:
+      - {qbo: value, type: STRING}
+      - {qbo: name, type: STRING}
+      - {qbo: type, type: STRING}
+
+  Memo:
+    fields:
+      - {qbo: value, type: STRING}
+
+  Address:
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: Line1, type: STRING}
+      - {qbo: Line2, type: STRING}
+      - {qbo: Line3, type: STRING}
+      - {qbo: Line4, type: STRING}
+      - {qbo: Line5, type: STRING}
+      - {qbo: City, type: STRING}
+      - {qbo: Country, type: STRING}
+      - {qbo: CountryCode, type: STRING}
+      - {qbo: CountrySubDivisionCode, type: STRING}
+      - {qbo: PostalCode, type: STRING}
+      - {qbo: PostalCodeSuffix, type: STRING}
+      - {qbo: Lat, type: STRING}
+      - {qbo: Long, type: STRING}
+      - {qbo: Tag, type: STRING}
+      - {qbo: Note, type: STRING}
+
+  Email:
+    fields:
+      - {qbo: Address, type: STRING}
+
+  Phone:
+    fields:
+      - {qbo: FreeFormNumber, type: STRING}
+
+  WebSite:
+    fields:
+      - {qbo: URI, type: STRING}
+
+  NameValue:
+    fields:
+      - {qbo: Name, type: STRING}
+      - {qbo: Value, type: STRING}
+
+  CustomField:
+    fields:
+      - {qbo: DefinitionId, type: STRING}
+      - {qbo: Name, type: STRING}
+      - {qbo: Type, type: STRING}
+      - {qbo: StringValue, type: STRING}
+
+  LinkedTxn:
+    fields:
+      - {qbo: TxnId, type: STRING}
+      - {qbo: TxnType, type: STRING}
+      - {qbo: TxnLineId, type: STRING}
+
+  DeliveryInfo:
+    fields:
+      - {qbo: DeliveryType, type: STRING}
+      - {qbo: DeliveryTime, type: TIMESTAMP}
+
+  MarkupInfo:
+    fields:
+      - {qbo: PercentBased, type: BOOL}
+      - {qbo: Value, type: NUMERIC}
+      - {qbo: Percent, type: NUMERIC}
+      - {qbo: PriceLevelRef, ref: Ref}
+      - {qbo: MarkUpIncomeAccountRef, ref: Ref}
+
+  # ---- Tax -----------------------------------------------------------------
+  TaxLineDetail:
+    fields:
+      - {qbo: TaxRateRef, ref: Ref}
+      - {qbo: PercentBased, type: BOOL}
+      - {qbo: TaxPercent, type: NUMERIC}
+      - {qbo: NetAmountTaxable, type: NUMERIC}
+      - {qbo: TaxInclusiveAmount, type: NUMERIC}
+      - {qbo: OverrideDeltaAmount, type: NUMERIC}
+
+  TaxLine:
+    fields:
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: TaxLineDetail, ref: TaxLineDetail}
+
+  TxnTaxDetail:
+    fields:
+      - {qbo: TxnTaxCodeRef, ref: Ref}
+      - {qbo: TotalTax, type: NUMERIC}
+      - {qbo: TaxLine, ref: TaxLine, repeated: true}
+
+  TaxRateDetail:
+    fields:
+      - {qbo: TaxRateRef, ref: Ref}
+      - {qbo: TaxTypeApplicable, type: STRING}
+      - {qbo: TaxOrder, type: INT64}
+
+  TaxRateList:
+    fields:
+      - {qbo: TaxRateDetail, ref: TaxRateDetail, repeated: true}
+
+  # ---- Sales-form lines (Invoice, Estimate, CreditMemo, SalesReceipt, RefundReceipt)
+  SalesItemLineDetail:
+    fields:
+      - {qbo: ItemRef, ref: Ref}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: ItemAccountRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+      - {qbo: TaxClassificationRef, ref: Ref}
+      - {qbo: UnitPrice, type: NUMERIC}
+      - {qbo: Qty, type: NUMERIC}
+      - {qbo: ServiceDate, type: DATE}
+      - {qbo: DiscountRate, type: NUMERIC}
+      - {qbo: DiscountAmt, type: NUMERIC}
+      - {qbo: TaxInclusiveAmt, type: NUMERIC}
+      - {qbo: MarkupInfo, ref: MarkupInfo}
+
+  DiscountLineDetail:
+    fields:
+      - {qbo: PercentBased, type: BOOL}
+      - {qbo: DiscountPercent, type: NUMERIC}
+      - {qbo: DiscountAccountRef, ref: Ref}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+
+  DescriptionLineDetail:
+    fields:
+      - {qbo: ServiceDate, type: DATE}
+      - {qbo: TaxCodeRef, ref: Ref}
+
+  SubTotalLineDetail:
+    fields:
+      - {qbo: ItemRef, ref: Ref}
+
+  GroupMemberLine:
+    description: A line nested inside a GroupLineDetail (bundle) line.
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: LineNum, type: INT64}
+      - {qbo: Description, type: STRING}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: SalesItemLineDetail, ref: SalesItemLineDetail}
+      - {qbo: CustomExtensions, type: JSON}
+
+  GroupLineDetail:
+    fields:
+      - {qbo: GroupItemRef, ref: Ref}
+      - {qbo: Quantity, type: NUMERIC}
+      - {qbo: Line, ref: GroupMemberLine, repeated: true}
+
+  SalesLine:
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: LineNum, type: INT64}
+      - {qbo: Description, type: STRING}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: SalesItemLineDetail, ref: SalesItemLineDetail}
+      - {qbo: GroupLineDetail, ref: GroupLineDetail}
+      - {qbo: DescriptionLineDetail, ref: DescriptionLineDetail}
+      - {qbo: DiscountLineDetail, ref: DiscountLineDetail}
+      - {qbo: SubTotalLineDetail, ref: SubTotalLineDetail}
+      - {qbo: CustomField, ref: CustomField, repeated: true}
+      - {qbo: CustomExtensions, type: JSON}
+
+  # ---- Expense lines (Bill, Purchase, PurchaseOrder, VendorCredit) ----------
+  AccountBasedExpenseLineDetail:
+    fields:
+      - {qbo: AccountRef, ref: Ref}
+      - {qbo: CustomerRef, ref: Ref}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+      - {qbo: BillableStatus, type: STRING}
+      - {qbo: TaxAmount, type: NUMERIC}
+      - {qbo: TaxInclusiveAmt, type: NUMERIC}
+      - {qbo: MarkupInfo, ref: MarkupInfo}
+
+  ItemBasedExpenseLineDetail:
+    fields:
+      - {qbo: ItemRef, ref: Ref}
+      - {qbo: CustomerRef, ref: Ref}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+      - {qbo: PriceLevelRef, ref: Ref}
+      - {qbo: BillableStatus, type: STRING}
+      - {qbo: UnitPrice, type: NUMERIC}
+      - {qbo: Qty, type: NUMERIC}
+      - {qbo: TaxInclusiveAmt, type: NUMERIC}
+      - {qbo: MarkupInfo, ref: MarkupInfo}
+
+  ExpenseLine:
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: LineNum, type: INT64}
+      - {qbo: Description, type: STRING}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: Received, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: ProjectRef, ref: Ref}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: AccountBasedExpenseLineDetail, ref: AccountBasedExpenseLineDetail}
+      - {qbo: ItemBasedExpenseLineDetail, ref: ItemBasedExpenseLineDetail}
+      - {qbo: CustomField, ref: CustomField, repeated: true}
+      - {qbo: CustomExtensions, type: JSON}
+
+  # ---- Journal entries -------------------------------------------------------
+  JournalEntryEntity:
+    fields:
+      - {qbo: Type, type: STRING}
+      - {qbo: EntityRef, ref: Ref}
+
+  JournalEntryLineDetail:
+    fields:
+      - {qbo: PostingType, type: STRING}
+      - {qbo: AccountRef, ref: Ref}
+      - {qbo: Entity, ref: JournalEntryEntity}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: DepartmentRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+      - {qbo: JournalCodeRef, ref: Ref}
+      - {qbo: TaxApplicableOn, type: STRING}
+      - {qbo: TaxAmount, type: NUMERIC}
+      - {qbo: TaxInclusiveAmt, type: NUMERIC}
+      - {qbo: BillableStatus, type: STRING}
+
+  JournalEntryLine:
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: LineNum, type: INT64}
+      - {qbo: Description, type: STRING}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: ProjectRef, ref: Ref}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: JournalEntryLineDetail, ref: JournalEntryLineDetail}
+      - {qbo: CustomExtensions, type: JSON}
+
+  # ---- Deposits --------------------------------------------------------------
+  DepositLineDetail:
+    fields:
+      - {qbo: Entity, ref: Ref}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: AccountRef, ref: Ref}
+      - {qbo: PaymentMethodRef, ref: Ref}
+      - {qbo: TaxCodeRef, ref: Ref}
+      - {qbo: CheckNum, type: STRING}
+      - {qbo: TxnType, type: STRING}
+      - {qbo: TaxApplicableOn, type: STRING}
+
+  DepositLine:
+    fields:
+      - {qbo: Id, type: STRING}
+      - {qbo: LineNum, type: INT64}
+      - {qbo: Description, type: STRING}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: DetailType, type: STRING}
+      - {qbo: ProjectRef, ref: Ref}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: DepositLineDetail, ref: DepositLineDetail}
+      - {qbo: CustomField, ref: CustomField, repeated: true}
+      - {qbo: CustomExtensions, type: JSON}
+
+  CashBackInfo:
+    fields:
+      - {qbo: AccountRef, ref: Ref}
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: Memo, type: STRING}
+
+  # ---- Payments --------------------------------------------------------------
+  PaymentLine:
+    description: Line of a Payment or BillPayment (amount applied to linked transactions).
+    fields:
+      - {qbo: Amount, type: NUMERIC}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: LineEx, type: JSON}
+
+  CheckPayment:
+    fields:
+      - {qbo: BankAccountRef, ref: Ref}
+      - {qbo: PrintStatus, type: STRING}
+
+  CreditCardPayment:
+    fields:
+      - {qbo: CCAccountRef, ref: Ref}
+
+  # ---- Mixins (used with `include:` on entities) ------------------------------
+  TxnHeader:
+    description: Fields common to every transaction entity.
+    fields:
+      - {qbo: DocNumber, type: STRING}
+      - {qbo: TxnDate, type: DATE}
+      - {qbo: PrivateNote, type: STRING}
+      - {qbo: CurrencyRef, ref: Ref}
+      - {qbo: ExchangeRate, type: NUMERIC}
+      - {qbo: DepartmentRef, ref: Ref}
+      - {qbo: ProjectRef, ref: Ref}
+      - {qbo: RecurDataRef, ref: Ref}
+      - {qbo: TxnSource, type: STRING}
+      - {qbo: GlobalTaxCalculation, type: STRING}
+      - {qbo: TxnTaxDetail, ref: TxnTaxDetail}
+      - {qbo: LinkedTxn, ref: LinkedTxn, repeated: true}
+      - {qbo: CustomField, ref: CustomField, repeated: true}
+
+  SalesForm:
+    description: Fields common to customer-facing sales forms.
+    fields:
+      - {qbo: CustomerRef, ref: Ref}
+      - {qbo: CustomerMemo, ref: Memo}
+      - {qbo: BillAddr, ref: Address}
+      - {qbo: ShipAddr, ref: Address}
+      - {qbo: ShipFromAddr, ref: Address}
+      - {qbo: BillEmail, ref: Email}
+      - {qbo: ClassRef, ref: Ref}
+      - {qbo: ShipMethodRef, ref: Ref}
+      - {qbo: TaxExemptionRef, ref: Ref}
+      - {qbo: ShipDate, type: DATE}
+      - {qbo: TrackingNum, type: STRING}
+      - {qbo: PrintStatus, type: STRING}
+      - {qbo: EmailStatus, type: STRING}
+      - {qbo: ApplyTaxAfterDiscount, type: BOOL}
+      - {qbo: FreeFormAddress, type: BOOL}
+      - {qbo: TotalAmt, type: NUMERIC}
+      - {qbo: HomeTotalAmt, type: NUMERIC}
+      - {qbo: Line, ref: SalesLine, repeated: true}
+
+  Person:
+    description: Name and contact fields shared by Customer, Vendor and Employee.
+    fields:
+      - {qbo: Title, type: STRING}
+      - {qbo: GivenName, type: STRING}
+      - {qbo: MiddleName, type: STRING}
+      - {qbo: FamilyName, type: STRING}
+      - {qbo: Suffix, type: STRING}
+      - {qbo: DisplayName, type: STRING}
+      - {qbo: PrintOnCheckName, type: STRING}
+      - {qbo: Active, type: BOOL}
+      - {qbo: PrimaryPhone, ref: Phone}
+      - {qbo: AlternatePhone, ref: Phone}
+      - {qbo: Mobile, ref: Phone}
+      - {qbo: PrimaryEmailAddr, ref: Email}
+      - {qbo: V4IDPseudonym, type: STRING}

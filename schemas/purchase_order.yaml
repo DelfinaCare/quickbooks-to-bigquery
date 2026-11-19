@@ -1,0 +1,19 @@
+entity: PurchaseOrder
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: VendorRef, ref: Ref}
+  - {qbo: VendorAddr, ref: Address}
+  - {qbo: ShipAddr, ref: Address}
+  - {qbo: ShipTo, ref: Ref}
+  - {qbo: ShipMethodRef, ref: Ref}
+  - {qbo: APAccountRef, ref: Ref}
+  - {qbo: ClassRef, ref: Ref}
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: POStatus, type: STRING}
+  - {qbo: EmailStatus, type: STRING}
+  - {qbo: POEmail, ref: Email}
+  - {qbo: DueDate, type: DATE}
+  - {qbo: Memo, type: STRING}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: Line, ref: ExpenseLine, repeated: true}

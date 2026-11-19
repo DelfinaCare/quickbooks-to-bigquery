@@ -1,0 +1,20 @@
+entity: Invoice
+sync: cdc
+include: [TxnHeader, SalesForm]
+fields:
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: DueDate, type: DATE}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: HomeBalance, type: NUMERIC}
+  - {qbo: Deposit, type: NUMERIC}
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: DeliveryInfo, ref: DeliveryInfo}
+  - {qbo: BillEmailCc, ref: Email}
+  - {qbo: BillEmailBcc, ref: Email}
+  - {qbo: InvoiceLink, type: STRING}
+  - {qbo: AllowIPNPayment, type: BOOL}
+  - {qbo: AllowOnlinePayment, type: BOOL}
+  - {qbo: AllowOnlineCreditCardPayment, type: BOOL}
+  - {qbo: AllowOnlineACHPayment, type: BOOL}
+  - {qbo: AllowOnlinePayPalPayment, type: BOOL}
+  - {qbo: AllowOnlineAffirmPayment, type: BOOL}

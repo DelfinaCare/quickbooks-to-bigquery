@@ -1,0 +1,12 @@
+entity: SalesReceipt
+sync: cdc
+include: [TxnHeader, SalesForm]
+fields:
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: PaymentRefNum, type: STRING}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: HomeBalance, type: NUMERIC}
+  - {qbo: DeliveryInfo, ref: DeliveryInfo}
+  - {qbo: BillEmailCc, ref: Email}
+  - {qbo: BillEmailBcc, ref: Email}

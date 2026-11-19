@@ -1,0 +1,9 @@
+entity: Deposit
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: HomeTotalAmt, type: NUMERIC}
+  - {qbo: CashBack, ref: CashBackInfo}
+  - {qbo: Line, ref: DepositLine, repeated: true}

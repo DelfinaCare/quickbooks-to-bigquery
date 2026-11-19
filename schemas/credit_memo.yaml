@@ -1,0 +1,13 @@
+entity: CreditMemo
+sync: cdc
+include: [TxnHeader, SalesForm]
+fields:
+  - {qbo: SalesTermRef, ref: Ref}
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: RemainingCredit, type: NUMERIC}
+  - {qbo: Balance, type: NUMERIC}
+  - {qbo: HomeBalance, type: NUMERIC}
+  - {qbo: InvoiceRef, ref: Ref}
+  - {qbo: BillEmailCc, ref: Email}
+  - {qbo: BillEmailBcc, ref: Email}

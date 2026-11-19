@@ -1,0 +1,9 @@
+entity: JournalEntry
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: Adjustment, type: BOOL}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: HomeTotalAmt, type: NUMERIC}
+  - {qbo: JournalCodeRef, ref: Ref}
+  - {qbo: Line, ref: JournalEntryLine, repeated: true}

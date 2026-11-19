@@ -1,0 +1,10 @@
+# Not supported by the CDC endpoint, so always fully refreshed.
+entity: TaxAgency
+sync: full
+fields:
+  - {qbo: DisplayName, type: STRING}
+  - {qbo: TaxRegistrationNumber, type: STRING}
+  - {qbo: TaxTrackedOnSales, type: BOOL}
+  - {qbo: TaxTrackedOnPurchases, type: BOOL}
+  - {qbo: TaxAgencyConfig, type: STRING}
+  - {qbo: LastFileDate, type: DATE}

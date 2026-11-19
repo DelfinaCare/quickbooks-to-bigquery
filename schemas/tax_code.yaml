@@ -1,0 +1,13 @@
+# Tiny reference table with non-numeric ids (e.g. "TAX", "NON"); always fully refreshed.
+entity: TaxCode
+sync: full
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: Description, type: STRING}
+  - {qbo: Active, type: BOOL}
+  - {qbo: Hidden, type: BOOL}
+  - {qbo: Taxable, type: BOOL}
+  - {qbo: TaxGroup, type: BOOL}
+  - {qbo: TaxCodeConfigType, type: STRING}
+  - {qbo: SalesTaxRateList, ref: TaxRateList}
+  - {qbo: PurchaseTaxRateList, ref: TaxRateList}

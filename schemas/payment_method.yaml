@@ -1,0 +1,7 @@
+entity: PaymentMethod
+sync: cdc
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: Type, type: STRING}
+  - {qbo: Active, type: BOOL}

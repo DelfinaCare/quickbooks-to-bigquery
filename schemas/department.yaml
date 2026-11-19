@@ -1,0 +1,9 @@
+entity: Department
+sync: cdc
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: FullyQualifiedName, type: STRING}
+  - {qbo: SubDepartment, type: BOOL}
+  - {qbo: ParentRef, ref: Ref}
+  - {qbo: Active, type: BOOL}

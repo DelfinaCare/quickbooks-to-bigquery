@@ -1,0 +1,12 @@
+entity: Transfer
+sync: cdc
+fields:
+  - {qbo: TxnDate, type: DATE}
+  - {qbo: PrivateNote, type: STRING}
+  - {qbo: FromAccountRef, ref: Ref}
+  - {qbo: ToAccountRef, ref: Ref}
+  - {qbo: Amount, type: NUMERIC}
+  - {qbo: CurrencyRef, ref: Ref}
+  - {qbo: ExchangeRate, type: NUMERIC}
+  - {qbo: RecurDataRef, ref: Ref}
+  - {qbo: TxnSource, type: STRING}

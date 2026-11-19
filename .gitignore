@@ -1,0 +1,8 @@
+/qbo-bq
+/out/
+.env
+*.env
+.terraform/
+.terraform.lock.hcl
+*.tfstate*
+*.tfvars

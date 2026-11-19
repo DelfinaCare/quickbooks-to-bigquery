@@ -1,0 +1,20 @@
+entity: Account
+sync: cdc
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: FullyQualifiedName, type: STRING}
+  - {qbo: AcctNum, type: STRING}
+  - {qbo: Description, type: STRING}
+  - {qbo: Active, type: BOOL}
+  - {qbo: SubAccount, type: BOOL}
+  - {qbo: ParentRef, ref: Ref}
+  - {qbo: Classification, type: STRING}
+  - {qbo: AccountType, type: STRING}
+  - {qbo: AccountSubType, type: STRING}
+  - {qbo: AccountAlias, type: STRING}
+  - {qbo: TxnLocationType, type: STRING}
+  - {qbo: CurrentBalance, type: NUMERIC}
+  - {qbo: CurrentBalanceWithSubAccounts, type: NUMERIC}
+  - {qbo: CurrencyRef, ref: Ref}
+  - {qbo: TaxCodeRef, ref: Ref}

@@ -1,0 +1,13 @@
+entity: TaxRate
+sync: full
+include_inactive: true
+fields:
+  - {qbo: Name, type: STRING}
+  - {qbo: Description, type: STRING}
+  - {qbo: Active, type: BOOL}
+  - {qbo: RateValue, type: NUMERIC}
+  - {qbo: AgencyRef, ref: Ref}
+  - {qbo: TaxReturnLineRef, ref: Ref}
+  - {qbo: SpecialTaxType, type: STRING}
+  - {qbo: DisplayType, type: STRING}
+  - {qbo: EffectiveTaxRate, type: JSON}

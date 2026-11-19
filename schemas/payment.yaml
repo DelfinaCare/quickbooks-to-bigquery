@@ -1,0 +1,13 @@
+entity: Payment
+sync: cdc
+include: [TxnHeader]
+fields:
+  - {qbo: CustomerRef, ref: Ref}
+  - {qbo: ARAccountRef, ref: Ref}
+  - {qbo: DepositToAccountRef, ref: Ref}
+  - {qbo: PaymentMethodRef, ref: Ref}
+  - {qbo: PaymentRefNum, type: STRING}
+  - {qbo: TotalAmt, type: NUMERIC}
+  - {qbo: UnappliedAmt, type: NUMERIC}
+  - {qbo: ProcessPayment, type: BOOL}
+  - {qbo: Line, ref: PaymentLine, repeated: true}

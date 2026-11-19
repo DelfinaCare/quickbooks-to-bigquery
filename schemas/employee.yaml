@@ -1,0 +1,16 @@
+entity: Employee
+sync: cdc
+include_inactive: true
+include: [Person]
+fields:
+  - {qbo: PrimaryAddr, ref: Address}
+  - {qbo: EmployeeNumber, type: STRING}
+  - {qbo: SSN, type: STRING}
+  - {qbo: Gender, type: STRING}
+  - {qbo: BirthDate, type: DATE}
+  - {qbo: HiredDate, type: DATE}
+  - {qbo: ReleasedDate, type: DATE}
+  - {qbo: BillableTime, type: BOOL}
+  - {qbo: BillRate, type: NUMERIC}
+  - {qbo: CostRate, type: NUMERIC}
+  - {qbo: Organization, type: BOOL}
