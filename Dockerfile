@@ -3,7 +3,7 @@
 # ---- build: fully static binary -------------------------------------------------
 # Runs on the build host's platform and cross-compiles for the target, so
 # multi-arch builds need no QEMU emulation.
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
 ARG TARGETOS TARGETARCH
 RUN apk add --no-cache ca-certificates
 WORKDIR /src
