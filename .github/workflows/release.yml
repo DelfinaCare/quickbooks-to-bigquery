@@ -2,9 +2,13 @@ name: release
 
 # Push a semver tag (git tag v0.1.0 && git push origin v0.1.0) to publish a
 # release: the image goes to GHCR, and the GitHub release is created with the
-# SBOM and CLI binaries attached. Publishing a release from the UI creates the
-# tag, which runs this the same way. Running the workflow by hand with a
-# `version` input releases the commit it runs on and creates that tag.
+# SBOM and CLI binaries attached. Running the workflow by hand with a `version`
+# input releases the commit it runs on and creates that tag.
+#
+# Releases in this repository are immutable: once a release is published, no
+# asset can be added or replaced. So the image and binaries jobs only build and
+# hand their files over as workflow artifacts, and the release job creates and
+# publishes the release with every file in a single step, after both finished.
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
@@ -27,14 +31,22 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-latest
     permissions:
-      contents: write # upload the SBOM to the release
+      contents: read
       packages: write
       attestations: write
       id-token: write
     steps:
       - name: Check version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::version must look like v1.2.3, got $VERSION"; exit 1; }
+          # A published release can't take assets any more; fail before the
+          # image tags for this version are pushed (and overwritten).
+          if [[ "$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$VERSION" --jq .draft 2>/dev/null)" == false ]]; then
+            echo "::error::release $VERSION is already published and cannot be changed; release the next version instead"
+            exit 1
+          fi
 
       # Image references must be lowercase, but github.repository keeps the
       # owner's casing (DelfinaCare). metadata-action lowercases its tags on its
@@ -88,21 +100,17 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      # Creates the release (or updates the one published from the UI).
-      - uses: softprops/action-gh-release@v3
+      - uses: actions/upload-artifact@v4
         with:
-          generate_release_notes: true
-          tag_name: ${{ env.VERSION }}
-          target_commitish: ${{ github.sha }}
-          prerelease: ${{ contains(env.VERSION, '-') }}
-          files: qbo-bq-image.spdx.json
+          name: sbom
+          path: qbo-bq-image.spdx.json
+          if-no-files-found: error
 
   binaries:
     name: Build CLI binaries
-    needs: image # attach to the release the image job created
     runs-on: ubuntu-latest
     permissions:
-      contents: write # upload the binaries to the release
+      contents: read
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
@@ -119,7 +127,30 @@ jobs:
               go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o "dist/qbo-bq-$os-$arch" ./cmd/qbo-bq
           done
           (cd dist && sha256sum qbo-bq-* > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: [image, binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release (and, for a manual run, the tag)
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      # One call creates the release with all of its assets; it can't be
+      # amended once published.
       - uses: softprops/action-gh-release@v3
         with:
+          generate_release_notes: true
           tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ contains(env.VERSION, '-') }}
           files: dist/*
