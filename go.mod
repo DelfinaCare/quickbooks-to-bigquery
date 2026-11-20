@@ -3,6 +3,7 @@ module github.com/DelfinaCare/qbo-to-bigquery
 go 1.26.0
 
 require (
+	cloud.google.com/go/auth v0.24.4
 	cloud.google.com/go/bigquery v1.86.2
 	cloud.google.com/go/storage v1.71.0
 	github.com/jackc/pgx/v5 v5.13.0
@@ -16,7 +17,6 @@ require (
 require (
 	cel.dev/expr v0.25.3 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/auth v0.24.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.3.1 // indirect
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	cloud.google.com/go/iam v1.15.1 // indirect

@@ -2,10 +2,17 @@
 # onboarding, a Cloud Run job for syncing, and a scheduler to run it.
 #
 # Nothing here holds data: the BigQuery dataset, the optional raw-payload
-# bucket, PostgreSQL and the secrets are created by the caller and passed in.
+# bucket, the Cloud SQL instance and the secrets are created by the caller and
+# passed in. The app logs in to Cloud SQL as its own service account (IAM
+# database authentication), so there is no database password.
 
 data "google_project" "this" {
   project_id = var.project_id
+}
+
+data "google_sql_database_instance" "db" {
+  project = var.project_id
+  name    = var.db_instance
 }
 
 locals {
@@ -19,6 +26,8 @@ locals {
   service_url  = "https://${local.service_name}-${data.google_project.this.number}.${var.cloud_run_region}.run.app"
   redirect_uri = coalesce(var.qbo_redirect_uri, "${local.service_url}${local.web_path_prefix}/callback")
 
+  db_host = var.db_host != null ? var.db_host : data.google_sql_database_instance.db.private_ip_address
+
   sandbox     = var.qbo_environment == "sandbox"
   archive_raw = var.raw_payload_bucket != null
 
@@ -28,11 +37,12 @@ locals {
     {
       GCP_PROJECT_ID             = var.project_id
       BQ_DATASET                 = var.bq_dataset
-      DB_HOST                    = var.db_host
+      DB_HOST                    = local.db_host
       DB_PORT                    = tostring(var.db_port)
-      DB_USER                    = var.db_user
+      DB_USER                    = google_sql_user.runtime.name
       DB_NAME                    = var.db_name
       DB_SSLMODE                 = var.db_sslmode
+      DB_IAM_AUTH                = "true"
       QBO_MINOR_VERSION          = tostring(var.qbo_minor_version)
       SYNC_REPORTS               = tostring(var.sync_reports)
       FULL_REFRESH_INTERVAL_DAYS = tostring(var.full_refresh_interval_days)
@@ -49,7 +59,6 @@ locals {
   # Environment variable -> Secret Manager secret id.
   secret_env = merge(
     {
-      DB_PASS              = var.db_password_secret
       TOKEN_ENCRYPTION_KEY = var.token_encryption_key_secret
     },
     local.sandbox ? { QBO_SANDBOX_CLIENT_SECRET = var.qbo_client_secret_secret } : { QBO_CLIENT_SECRET = var.qbo_client_secret_secret },
@@ -85,6 +94,41 @@ resource "google_storage_bucket_iam_member" "raw" {
   bucket   = var.raw_payload_bucket
   role     = each.value
   member   = google_service_account.runtime.member
+}
+
+# ---- Database login (Cloud SQL IAM database authentication) ------------------
+
+# The service account's PostgreSQL role. Cloud SQL names it after the email
+# without ".gserviceaccount.com"; the app sends an access token as password.
+resource "google_sql_user" "runtime" {
+  project        = var.project_id
+  instance       = var.db_instance
+  name           = trimsuffix(google_service_account.runtime.email, ".gserviceaccount.com")
+  type           = "CLOUD_IAM_SERVICE_ACCOUNT"
+  database_roles = length(var.db_roles) > 0 ? var.db_roles : null
+
+  # PostgreSQL cannot drop a role that owns objects, and this one owns the
+  # app's tables: on destroy, leave it (and the data) in place.
+  deletion_policy = "ABANDON"
+
+  lifecycle {
+    precondition {
+      condition     = local.db_host != null && local.db_host != ""
+      error_message = "db_instance has no private IP; set db_host to the address the app should connect to."
+    }
+  }
+}
+
+# cloudsql.instances.login, on this instance only.
+resource "google_project_iam_member" "cloudsql_instance_user" {
+  project = var.project_id
+  role    = "roles/cloudsql.instanceUser"
+  member  = google_service_account.runtime.member
+
+  condition {
+    title      = "${var.name_prefix}-db-instance"
+    expression = "resource.name == \"projects/${var.project_id}/instances/${var.db_instance}\""
+  }
 }
 
 resource "google_secret_manager_secret_iam_member" "runtime" {
@@ -168,7 +212,10 @@ resource "google_cloud_run_v2_service" "manager" {
     }
   }
 
-  depends_on = [google_secret_manager_secret_iam_member.runtime]
+  depends_on = [
+    google_secret_manager_secret_iam_member.runtime,
+    google_project_iam_member.cloudsql_instance_user,
+  ]
 }
 
 # IAP calls the service as its own service agent.
@@ -258,6 +305,7 @@ resource "google_cloud_run_v2_job" "sync" {
 
   depends_on = [
     google_secret_manager_secret_iam_member.runtime,
+    google_project_iam_member.cloudsql_instance_user,
     google_bigquery_dataset_iam_member.data_editor,
     google_storage_bucket_iam_member.raw,
   ]

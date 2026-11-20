@@ -54,10 +54,8 @@ module "qbo_to_bigquery" {
   bq_dataset         = google_bigquery_dataset.qbo.dataset_id
   raw_payload_bucket = google_storage_bucket.qbo_raw.name # omit to disable raw archival
 
-  db_host                     = "10.1.2.3"
-  db_user                     = "qbo"
+  db_instance                 = "qbo-postgres" # Cloud SQL, with cloudsql.iam_authentication=on
   db_name                     = "qbo"
-  db_password_secret          = "qbo-db-pass"
   token_encryption_key_secret = "qbo-token-encryption-key"
 
   qbo_client_id            = "your-intuit-client-id"
@@ -73,4 +71,8 @@ output "admin_url" {
 
 output "redirect_uri" {
   value = module.qbo_to_bigquery.redirect_uri
+}
+
+output "db_user" {
+  value = module.qbo_to_bigquery.db_user
 }

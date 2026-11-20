@@ -22,3 +22,8 @@ output "service_account_email" {
   description = "Runtime service account of the service and the job."
   value       = google_service_account.runtime.email
 }
+
+output "db_user" {
+  description = "PostgreSQL role the app logs in as (the runtime service account's IAM database user). Grant it CREATE on the schema, or pass db_roles."
+  value       = google_sql_user.runtime.name
+}

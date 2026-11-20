@@ -4,8 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/auth/credentials"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// sqlLoginScope is the OAuth2 scope Cloud SQL accepts for IAM database logins.
+const sqlLoginScope = "https://www.googleapis.com/auth/sqlservice.login"
 
 // Store is the PostgreSQL-backed installation store.
 type Store struct {
@@ -13,13 +18,31 @@ type Store struct {
 	cipher *Cipher
 }
 
-// Open connects to PostgreSQL over TCP.
-func Open(ctx context.Context, databaseURL string, c *Cipher) (*Store, error) {
+// Open connects to PostgreSQL over TCP. With iamAuth, every new connection
+// logs in with a fresh OAuth2 access token of the ambient Google credentials
+// as its password (Cloud SQL IAM database authentication), so there is no
+// password to store or rotate.
+func Open(ctx context.Context, databaseURL string, c *Cipher, iamAuth bool) (*Store, error) {
 	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse database config: %w", err)
 	}
 	cfg.MaxConns = 5
+	if iamAuth {
+		// The credentials cache the token and refresh it before it expires.
+		creds, err := credentials.DetectDefault(&credentials.DetectOptions{Scopes: []string{sqlLoginScope}})
+		if err != nil {
+			return nil, fmt.Errorf("IAM database authentication: %w", err)
+		}
+		cfg.BeforeConnect = func(ctx context.Context, cc *pgx.ConnConfig) error {
+			tok, err := creds.Token(ctx)
+			if err != nil {
+				return fmt.Errorf("IAM database authentication: get access token: %w", err)
+			}
+			cc.Password = tok.Value
+			return nil
+		}
+	}
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err

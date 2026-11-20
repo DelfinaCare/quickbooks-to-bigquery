@@ -96,8 +96,8 @@ company is marked `needs_reauth` and shown with a *Reconnect* button in the UI.
 
 ## Deploying to Google Cloud
 
-Prerequisites: a PostgreSQL instance reachable from a VPC (e.g. Cloud SQL with
-a private IP) with a database and user for this app, and an app at
+Prerequisites: a Cloud SQL for PostgreSQL instance with a private IP, the
+`cloudsql.iam_authentication` flag on and a database for this app, and an app at
 [developer.intuit.com](https://developer.intuit.com) with the
 `com.intuit.quickbooks.accounting` scope.
 
@@ -122,11 +122,9 @@ module "qbo_to_bigquery" {
   bq_dataset         = google_bigquery_dataset.qbo.dataset_id   # you create it
   raw_payload_bucket = google_storage_bucket.qbo_raw.name       # optional; you create it
 
-  db_host                     = "10.1.2.3"
-  db_user                     = "qbo"
+  db_instance                 = "qbo-postgres"             # Cloud SQL instance name
   db_name                     = "qbo"
-  db_password_secret          = "qbo-db-pass"              # Secret Manager secret ids
-  token_encryption_key_secret = "qbo-token-encryption-key"
+  token_encryption_key_secret = "qbo-token-encryption-key" # Secret Manager secret ids
 
   qbo_client_id            = "…"
   qbo_client_secret_secret = "qbo-client-secret"
@@ -135,7 +133,8 @@ module "qbo_to_bigquery" {
 }
 ```
 
-The module creates only stateless pieces: a least-privilege service account,
+The module creates only stateless pieces: a least-privilege service account
+that logs in to PostgreSQL as an IAM database user (no password to rotate),
 the `qbo-manager` service behind IAP, the `qbo-sync-worker` job with Direct VPC
 egress, and an hourly schedule. The dataset, the optional raw-payload bucket
 (any storage class and lifecycle you like), the image and the secrets are
@@ -166,7 +165,8 @@ Afterwards:
 | `RAW_PAYLOAD_GCS_BUCKET` | empty | existing bucket for the raw response archive; empty disables archival |
 | `RAW_PAYLOAD_GCS_PREFIX` | `raw` | |
 | `DB_HOST`, `DB_USER`, `DB_NAME` | – | required; direct TCP connection |
-| `DB_PASS` | – | |
+| `DB_PASS` | – | ignored with `DB_IAM_AUTH` |
+| `DB_IAM_AUTH` | `false` | Cloud SQL IAM database authentication: log in as `DB_USER` (e.g. `sa-name@project.iam`) with an access token of the ambient Google credentials; requires `DB_SSLMODE` `require` or stricter |
 | `DB_PORT` / `DB_SSLMODE` | `5432` / `prefer` | |
 | `TOKEN_ENCRYPTION_KEY` | – | required; `openssl rand -base64 32`. Changing it invalidates stored tokens. |
 | `QBO_CLIENT_ID`, `QBO_CLIENT_SECRET` | – | production app keys |

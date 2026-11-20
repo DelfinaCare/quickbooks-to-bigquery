@@ -25,7 +25,7 @@ func testStore(t *testing.T) *Store {
 	}
 	c, _ := NewCipher(bytes.Repeat([]byte{1}, 32))
 	ctx := context.Background()
-	s, err := Open(ctx, url, c)
+	s, err := Open(ctx, url, c, false)
 	if err != nil {
 		t.Fatal(err)
 	}

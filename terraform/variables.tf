@@ -15,23 +15,13 @@ variable "bq_dataset" {
   type        = string
 }
 
-variable "db_host" {
-  description = "Private IP or hostname of the PostgreSQL instance holding installations and encrypted refresh tokens."
-  type        = string
-}
-
-variable "db_user" {
-  description = "PostgreSQL user."
+variable "db_instance" {
+  description = "Name of the existing Cloud SQL for PostgreSQL instance (in project_id) holding installations and encrypted refresh tokens. It must have the cloudsql.iam_authentication flag on: the module creates an IAM database user for the runtime service account, so there is no password to manage."
   type        = string
 }
 
 variable "db_name" {
-  description = "PostgreSQL database."
-  type        = string
-}
-
-variable "db_password_secret" {
-  description = "ID of an existing Secret Manager secret (in this project) holding the PostgreSQL password."
+  description = "PostgreSQL database on db_instance."
   type        = string
 }
 
@@ -103,6 +93,18 @@ variable "name_prefix" {
   }
 }
 
+variable "db_host" {
+  description = "Address the app connects to. Defaults to db_instance's private IP; set it when reaching the instance some other way (e.g. a Private Service Connect endpoint)."
+  type        = string
+  default     = null
+}
+
+variable "db_roles" {
+  description = "PostgreSQL roles granted to the runtime service account's database user, e.g. [\"qbo\"] to inherit the tables owned by a former password user. Without one, grant it CREATE on the schema yourself (see README)."
+  type        = list(string)
+  default     = []
+}
+
 variable "db_port" {
   description = "PostgreSQL port."
   type        = number
@@ -110,13 +112,18 @@ variable "db_port" {
 }
 
 variable "db_sslmode" {
-  description = "PostgreSQL sslmode."
+  description = "PostgreSQL sslmode. The password is an access token, so the connection must be encrypted."
   type        = string
-  default     = "prefer"
+  default     = "require"
+
+  validation {
+    condition     = contains(["require", "verify-ca", "verify-full"], var.db_sslmode)
+    error_message = "db_sslmode must be require, verify-ca or verify-full."
+  }
 }
 
 variable "vpc_network" {
-  description = "VPC network (name or self link) with a route to db_host, used for Direct VPC egress."
+  description = "VPC network (name or self link) with a route to the database, used for Direct VPC egress."
   type        = string
   default     = "default"
 }
