@@ -36,6 +36,12 @@ jobs:
         run: |
           [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::version must look like v1.2.3, got $VERSION"; exit 1; }
 
+      # Image references must be lowercase, but github.repository keeps the
+      # owner's casing (DelfinaCare). metadata-action lowercases its tags on its
+      # own; the digest reference passed to syft does not get that treatment.
+      - name: Image name
+        run: echo "IMAGE=${REGISTRY}/${IMAGE_NAME,,}" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v7
 
       # No QEMU: the Dockerfile's builder stage runs on the host platform and
@@ -53,7 +59,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE }}
           tags: |
             type=semver,pattern={{version}},value=${{ env.VERSION }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }}
@@ -76,7 +82,7 @@ jobs:
       - name: Generate SBOM
         uses: anchore/sbom-action@v0.24.3
         with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
+          image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
           format: spdx-json
           output-file: qbo-bq-image.spdx.json
           upload-artifact: false
