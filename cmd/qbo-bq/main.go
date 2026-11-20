@@ -103,7 +103,7 @@ func openStore(ctx context.Context, cfg *config.Config) (*db.Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	store, err := db.Open(ctx, cfg.DatabaseURL(), c)
+	store, err := db.Open(ctx, cfg.DatabaseURL(), c, cfg.DBIAMAuth)
 	if err != nil {
 		return nil, err
 	}

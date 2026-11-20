@@ -61,6 +61,25 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoadIAMAuth(t *testing.T) {
+	m := map[string]string{"DB_HOST": "10.0.0.5", "DB_USER": "qbo-bq-sa@proj.iam", "DB_PASS": "ignored", "DB_NAME": "qbo", "DB_IAM_AUTH": "true", "DB_SSLMODE": "require"}
+	c, err := Load(env(m))
+	if err != nil || !c.DBIAMAuth {
+		t.Fatalf("got %+v, %v", c, err)
+	}
+	if got := c.DatabaseURL(); got != "postgres://qbo-bq-sa%40proj.iam@10.0.0.5:5432/qbo?sslmode=require" {
+		t.Errorf("DatabaseURL = %s", got)
+	}
+	// The access token must not be sent over a connection that may be plaintext.
+	delete(m, "DB_SSLMODE")
+	if _, err := Load(env(m)); err == nil || !strings.Contains(err.Error(), "DB_SSLMODE") {
+		t.Errorf("sslmode=prefer accepted with IAM auth: %v", err)
+	}
+	if _, err := Load(env(map[string]string{"DB_IAM_AUTH": "yes"})); err == nil {
+		t.Error("invalid DB_IAM_AUTH accepted")
+	}
+}
+
 func TestLoadWriteMethod(t *testing.T) {
 	c, err := Load(env(map[string]string{"BQ_WRITE_METHOD": "storage_write", "BQ_MAX_STALENESS_MINUTES": "0"}))
 	if err != nil || c.BQWriteMethod != "storage_write" || c.BQMaxStaleness != 0 {

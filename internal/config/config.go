@@ -34,7 +34,10 @@ type Config struct {
 	BQMaxStaleness time.Duration // storage_write only
 
 	DBHost, DBPort, DBUser, DBPass, DBName, DBSSLMode string
-	TokenEncryptionKey                                []byte
+	// DBIAMAuth logs in with Cloud SQL IAM database authentication: DBUser is
+	// the IAM principal and an OAuth2 access token replaces DBPass.
+	DBIAMAuth          bool
+	TokenEncryptionKey []byte
 
 	QBOClientID, QBOClientSecret               string // production keys
 	QBOSandboxClientID, QBOSandboxClientSecret string // development (sandbox) keys
@@ -89,6 +92,13 @@ func Load(getenv func(string) string, need ...Feature) (*Config, error) {
 		bad("FULL_REFRESH_INTERVAL_DAYS must be a non-negative integer")
 	}
 	c.FullRefreshInterval = time.Duration(days) * 24 * time.Hour
+	if c.DBIAMAuth, err = strconv.ParseBool(get("DB_IAM_AUTH", "false")); err != nil {
+		bad("DB_IAM_AUTH must be true or false")
+	}
+	// The password is a bearer token; never let it go out unencrypted.
+	if c.DBIAMAuth && (c.DBSSLMode == "disable" || c.DBSSLMode == "allow" || c.DBSSLMode == "prefer") {
+		bad("DB_IAM_AUTH requires DB_SSLMODE=require, verify-ca or verify-full")
+	}
 	if c.BQWriteMethod != "merge" && c.BQWriteMethod != "storage_write" {
 		bad("BQ_WRITE_METHOD must be merge or storage_write")
 	}
@@ -170,11 +180,16 @@ func (c *Config) Environments() []string {
 	return out
 }
 
-// DatabaseURL builds the pgx connection string.
+// DatabaseURL builds the pgx connection string. With DBIAMAuth it carries no
+// password; db.Open supplies an access token per connection.
 func (c *Config) DatabaseURL() string {
+	user := url.UserPassword(c.DBUser, c.DBPass)
+	if c.DBIAMAuth {
+		user = url.User(c.DBUser)
+	}
 	u := url.URL{
 		Scheme:   "postgres",
-		User:     url.UserPassword(c.DBUser, c.DBPass),
+		User:     user,
 		Host:     net.JoinHostPort(c.DBHost, c.DBPort),
 		Path:     "/" + c.DBName,
 		RawQuery: url.Values{"sslmode": {c.DBSSLMode}}.Encode(),
