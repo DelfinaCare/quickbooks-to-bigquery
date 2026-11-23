@@ -144,7 +144,7 @@ func serve(ctx context.Context, log *slog.Logger, _ []string) error {
 	}
 	defer store.Close()
 	srv := &web.Server{
-		Store: store, OAuth: &qbo.OAuth{Creds: cfg.Credentials}, BasePath: cfg.WebPathPrefix,
+		Store: store, OAuth: &qbo.OAuth{Creds: cfg.Credentials, Log: log}, BasePath: cfg.WebPathPrefix,
 		RedirectURI: cfg.QBORedirectURI, Environments: cfg.Environments(), Log: log,
 		CompanyName: func(ctx context.Context, env, realmID, accessToken string) (string, error) {
 			return qbo.NewClient(env, realmID, cfg.QBOMinorVersion, staticToken(accessToken)).CompanyName(ctx)
@@ -290,7 +290,7 @@ func runSync(ctx context.Context, log *slog.Logger, args []string) error {
 		SyncReports: cfg.SyncReports, FullEvery: cfg.FullRefreshInterval, ForceFull: *full,
 		Entities: splitList(*entities), Log: log,
 	}
-	oauth := &qbo.OAuth{Creds: cfg.Credentials}
+	oauth := &qbo.OAuth{Creds: cfg.Credentials, Log: log}
 	log.Info("sync run starting", "run_id", s.RunID, "installations", len(all))
 	failed, synced := 0, 0
 	for _, inst := range all {
@@ -436,7 +436,7 @@ func importToken(ctx context.Context, log *slog.Logger, args []string) error {
 	if err := store.Upsert(ctx, *realm, *name, *env, "import-token", &qbo.Token{RefreshToken: refresh}); err != nil {
 		return err
 	}
-	tokens := &dbTokens{store: store, oauth: &qbo.OAuth{Creds: cfg.Credentials}, realmID: *realm}
+	tokens := &dbTokens{store: store, oauth: &qbo.OAuth{Creds: cfg.Credentials, Log: log}, realmID: *realm}
 	access, err := tokens.AccessToken(ctx, true)
 	if err != nil {
 		return fmt.Errorf("the refresh token was stored but could not be used: %w", err)

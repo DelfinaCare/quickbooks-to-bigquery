@@ -94,6 +94,14 @@ before the commit, so concurrent processes can never lose a rotation. Tokens are
 stored AES-256-GCM encrypted. If Intuit rejects a token (`invalid_grant`) the
 company is marked `needs_reauth` and shown with a *Reconnect* button in the UI.
 
+**OAuth endpoints** come from Intuit's discovery document for each environment,
+cached for a day. If it cannot be read, the built-in endpoints are used.
+
+**Troubleshooting with Intuit.** Every error from the QBO API, the token
+endpoint or token revocation includes Intuit's `intuit_tid` response header.
+Archived raw responses carry it as `intuit-tid` GCS object metadata. Give this
+value to Intuit support.
+
 ## Deploying to Google Cloud
 
 Prerequisites: a Cloud SQL for PostgreSQL instance with a private IP, the
@@ -320,6 +328,11 @@ Disconnecting a company in the admin UI revokes its token with Intuit and
 stops syncing; data already in BigQuery and Cloud Storage stays there until you
 delete it. Retention, access control and deletion of the mirrored data are up
 to you as the operator of your Google Cloud project.
+
+## Intuit app assessment
+
+Answers to Intuit's production-keys questionnaire, with the code behind each, are in
+[docs/intuit-app-assessment.md](docs/intuit-app-assessment.md).
 
 ## License
 

@@ -44,7 +44,7 @@ type Store interface {
 
 // OAuth is the slice of *qbo.OAuth the UI needs.
 type OAuth interface {
-	AuthCodeURL(environment, redirectURI, state string) (string, error)
+	AuthCodeURL(ctx context.Context, environment, redirectURI, state string) (string, error)
 	Exchange(ctx context.Context, environment, code, redirectURI string) (*qbo.Token, error)
 	Revoke(ctx context.Context, environment, token string) error
 }
@@ -172,7 +172,7 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	state := base64.RawURLEncoding.EncodeToString(raw)
-	target, err := s.OAuth.AuthCodeURL(env, s.RedirectURI, state)
+	target, err := s.OAuth.AuthCodeURL(r.Context(), env, s.RedirectURI, state)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
