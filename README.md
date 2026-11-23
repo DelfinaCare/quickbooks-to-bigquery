@@ -321,6 +321,11 @@ stops syncing; data already in BigQuery and Cloud Storage stays there until you
 delete it. Retention, access control and deletion of the mirrored data are up
 to you as the operator of your Google Cloud project.
 
+## Intuit app assessment
+
+Answers to Intuit's production-keys questionnaire, with the code behind each, are in
+[docs/intuit-app-assessment.md](docs/intuit-app-assessment.md).
+
 ## License
 
 [MIT](LICENSE)
