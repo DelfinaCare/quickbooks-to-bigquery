@@ -284,6 +284,43 @@ experiments with emulators (note that `goccy/bigquery-emulator` cannot execute
 - Companies are synced one after another within a run.
 - Disconnecting a company keeps its rows in BigQuery.
 
+## Intended use and end-user license
+
+This is self-hosted software for querying **your own** QuickBooks Online data
+in **your own** BigQuery. You deploy it in your own Google Cloud project,
+register your own app at [developer.intuit.com](https://developer.intuit.com),
+and connect only QuickBooks companies you own or are authorised to access.
+It is not a hosted service: nobody else runs it on your behalf, and there is
+no account to sign up for.
+
+Use of the software is governed by the [MIT License](LICENSE). It is provided
+"as is", without warranty of any kind, and the authors are not liable for any
+claim, damages or other liability arising from its use. You are responsible
+for complying with Intuit's terms for your developer app and for how you
+handle the data once it is in your BigQuery dataset.
+
+## Privacy policy
+
+The authors of this software do not operate it, and do not receive, collect,
+store or have access to any of your data.
+
+When you run it, the software:
+
+- reads accounting data (the entities and reports listed above) from the
+  QuickBooks companies you connect, using the
+  `com.intuit.quickbooks.accounting` scope;
+- writes that data only to resources in your own Google Cloud project: your
+  BigQuery dataset and, if you configure one, your Cloud Storage bucket;
+- stores OAuth refresh tokens, encrypted with AES-256-GCM using a key you
+  supply, in your own PostgreSQL database;
+- sends no telemetry or analytics, and contacts no servers other than Intuit's
+  QuickBooks and OAuth APIs and the Google Cloud APIs you configure.
+
+Disconnecting a company in the admin UI revokes its token with Intuit and
+stops syncing; data already in BigQuery and Cloud Storage stays there until you
+delete it. Retention, access control and deletion of the mirrored data are up
+to you as the operator of your Google Cloud project.
+
 ## License
 
 [MIT](LICENSE)
