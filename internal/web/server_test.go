@@ -74,7 +74,7 @@ func (f *fakeStore) ConsumeOAuthState(_ context.Context, token string) (string, 
 
 type fakeOAuth struct{ revoked []string }
 
-func (f *fakeOAuth) AuthCodeURL(env, redirect, state string) (string, error) {
+func (f *fakeOAuth) AuthCodeURL(_ context.Context, env, redirect, state string) (string, error) {
 	return qbo.AuthorizeURL + "?" + url.Values{"client_id": {"cid-" + env}, "redirect_uri": {redirect}, "response_type": {"code"}, "scope": {qbo.Scope}, "state": {state}}.Encode(), nil
 }
 

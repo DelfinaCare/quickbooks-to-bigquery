@@ -26,6 +26,7 @@ type ArchiveMeta struct {
 	Endpoint   string // short label: "query", "cdc", "report_ProfitAndLoss_Accrual", ...
 	RequestURL string
 	HTTPStatus int
+	IntuitTID  string // intuit_tid response header, for Intuit support
 	FetchedAt  time.Time
 }
 
@@ -123,6 +124,9 @@ func (a *GCSArchiver) Archive(ctx context.Context, m ArchiveMeta, body []byte) (
 		"run-id":      m.RunID,
 		"request-url": m.RequestURL,
 		"http-status": strconv.Itoa(m.HTTPStatus),
+	}
+	if m.IntuitTID != "" {
+		w.Metadata["intuit-tid"] = m.IntuitTID
 	}
 	if _, err := w.Write(gz); err != nil {
 		_ = w.Close()

@@ -33,18 +33,24 @@ type TokenSource interface {
 	AccessToken(ctx context.Context, force bool) (string, error)
 }
 
+// IntuitTIDHeader is the response header carrying Intuit's transaction id.
+// Intuit support asks for it when troubleshooting a request.
+const IntuitTIDHeader = "intuit_tid"
+
 // Response is a raw API response, kept verbatim for archival.
 type Response struct {
-	URL    string
-	Status int
-	Body   []byte
+	URL       string
+	Status    int
+	Body      []byte
+	IntuitTID string // value of the intuit_tid response header, if any
 }
 
 // APIError is a non-retryable (or retries-exhausted) HTTP failure.
 type APIError struct {
-	Status int
-	URL    string
-	Body   string
+	Status    int
+	URL       string
+	Body      string
+	IntuitTID string
 }
 
 func (e *APIError) Error() string {
@@ -52,7 +58,15 @@ func (e *APIError) Error() string {
 	if len(b) > 500 {
 		b = b[:500] + "..."
 	}
-	return fmt.Sprintf("QBO API returned HTTP %d for %s: %s", e.Status, e.URL, b)
+	return fmt.Sprintf("QBO API returned HTTP %d for %s%s: %s", e.Status, e.URL, tidSuffix(e.IntuitTID), b)
+}
+
+// tidSuffix formats an intuit_tid for inclusion in an error message.
+func tidSuffix(tid string) string {
+	if tid == "" {
+		return ""
+	}
+	return " (intuit_tid " + tid + ")"
 }
 
 // Client is a rate-limited QBO Accounting API client for one company.
@@ -143,9 +157,9 @@ func (c *Client) Get(ctx context.Context, path string, query url.Values) (*Respo
 				refreshed, forceToken = true, true
 				continue // retry immediately with a fresh token
 			case resp.Status == http.StatusTooManyRequests || resp.Status >= 500:
-				lastErr = &APIError{Status: resp.Status, URL: full, Body: string(resp.Body)}
+				lastErr = &APIError{Status: resp.Status, URL: full, Body: string(resp.Body), IntuitTID: resp.IntuitTID}
 			default:
-				return resp, &APIError{Status: resp.Status, URL: full, Body: string(resp.Body)}
+				return resp, &APIError{Status: resp.Status, URL: full, Body: string(resp.Body), IntuitTID: resp.IntuitTID}
 			}
 		}
 		if attempt == c.MaxAttempts {
@@ -203,5 +217,5 @@ func (c *Client) do(ctx context.Context, full, token string) (*Response, time.Du
 			retryAfter = 5 * time.Minute
 		}
 	}
-	return &Response{URL: full, Status: resp.StatusCode, Body: body}, retryAfter, nil
+	return &Response{URL: full, Status: resp.StatusCode, Body: body, IntuitTID: resp.Header.Get(IntuitTIDHeader)}, retryAfter, nil
 }

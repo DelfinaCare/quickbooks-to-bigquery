@@ -125,7 +125,7 @@ func (s *Syncer) warnUnknown(entity, path, gcsURI string) {
 func (s *Syncer) archive(ctx context.Context, realmID, entity, endpoint string, resp *qbo.Response, at time.Time) (string, error) {
 	return s.Archiver.Archive(ctx, qbo.ArchiveMeta{
 		RealmID: realmID, Entity: entity, RunID: s.RunID, Seq: int(s.seq.Add(1)),
-		Endpoint: endpoint, RequestURL: resp.URL, HTTPStatus: resp.Status, FetchedAt: at,
+		Endpoint: endpoint, RequestURL: resp.URL, HTTPStatus: resp.Status, IntuitTID: resp.IntuitTID, FetchedAt: at,
 	}, resp.Body)
 }
 

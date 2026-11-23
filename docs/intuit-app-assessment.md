@@ -15,7 +15,7 @@ this code. Whoever submits the questionnaire must confirm them.
 | 2 | How often does your app refresh access tokens? | **When the access token expires (about every hour)** | `dbTokens.AccessToken` (`cmd/qbo-bq/main.go`) reuses the cached access token until less than 5 minutes remain of its 60-minute life, and refreshes early once on an HTTP 401. Choose the option closest to "hourly" or "only when expired". |
 | 3 | Does your app retry failed authorization and authentication requests? | **Yes** | On a 401 the API client refreshes the access token and retries once (`qbo.Client.Get`, `TestGetRefreshesTokenOnceOn401`). An `invalid_grant` is not retried, since it is permanent. A failed run is retried by the next hourly job. |
 | 4 | On an authorization error, do you ask customers to reconnect? | **Yes** | `invalid_grant` sets the company to `needs_reauth`, and the admin UI then shows it in red with a **Reconnect** button (`db.Store.RefreshAccessToken`, `templates/index.html`). |
-| 5 | Did you use the Intuit discovery document for OAuth endpoints? | **No** | The endpoints are constants in `internal/qbo/oauth.go` (`AuthorizeURL`, `TokenURL`, `RevokeURL`). |
+| 5 | Did you use the Intuit discovery document for OAuth endpoints? | **Yes** | `qbo.OAuth.Endpoints` reads the authorization, token and revocation endpoints from Intuit's discovery document for each environment (`openid_configuration` / `openid_sandbox_configuration`) and caches them for 24 hours. Discovered endpoints must be https on an `intuit.com` host before the client secret is sent to them. If the document can't be read, the built-in endpoints are used, a warning is logged and the fetch is retried after 5 minutes (`TestOAuthUsesDiscoveryDocument`, `TestOAuthDiscoveryFallsBack`). |
 | 6a | Handles errors from expired access tokens? | **Yes** | Proactive refresh before expiry, plus refresh-and-retry on 401. |
 | 6b | Handles errors from expired refresh tokens? | **Yes** | Intuit returns `invalid_grant`, which leads to `needs_reauth` and Reconnect (as in #4). Rotated refresh tokens are saved under a row lock so a rotation is never lost, and `refresh_token_expires_at` is stored and shown. |
 | 6c | Handles invalid grant errors? | **Yes** | `qbo.ErrInvalidGrant` → `db.ErrNeedsReauth`. Other companies keep syncing (`TestRefreshAccessTokenInvalidGrant`). |
@@ -34,7 +34,7 @@ this code. Whoever submits the questionnaire must confirm them.
 | # | Question | Answer | Basis |
 |---|---|---|---|
 | 1 | Tested handling API errors, including syntax and validation errors? | **Yes** | Non-retryable 4xx responses (for example a 400 query/validation fault) are returned unretried with the body. 429 and 5xx get exponential backoff that honours Retry-After. A failing entity or company does not block the others (`TestGetDoesNotRetryClientErrors`, `TestGetRetries429WithBackoff`, `TestGetGivesUpAndReturnsLastResponse`). |
-| 2 | Does your app capture `intuit_tid` from response headers? | **No** | It is not currently read or logged. |
+| 2 | Does your app capture `intuit_tid` from response headers? | **Yes** | The `intuit_tid` header is stored on every API response (`qbo.Response.IntuitTID`). It appears in every API, token-endpoint and revoke error message, so it reaches the logs, and it is saved as `intuit-tid` metadata on each archived raw response in GCS (`TestGetCapturesIntuitTID`). |
 | 3 | Does your app store error information in logs that can be shared for troubleshooting? | **Yes** | Structured JSON logs go to Cloud Logging and include the realm, entity, run id, HTTP status, URL and response body. Every raw API response is archived to GCS before it is parsed. Field-level failures are recorded in BigQuery `_ingest_errors`. |
 | 4 | Do you provide a way for customers to contact you for support from within your app? | **No** | This is an internal tool. Its only users are our own staff, who sign in through IAP, and support happens through internal channels. It is not offered to third-party QuickBooks customers. |
 
@@ -49,11 +49,3 @@ this code. Whoever submits the questionnaire must confirm them.
 | 5 | Does your app use Captcha for authentication? | **No** | There is no public login. Access is IAP-only for a fixed allowlist. |
 | 6 | Does your app use WebSocket? | **No** | |
 | 7 | Once a customer's Intuit data is in your system, can anyone other than that customer use or see it? | **No** | The data goes only to the BigQuery dataset and GCS bucket of the organization that connected the company, and access is governed by that organization's IAM. Nothing is shared with third parties. |
-
-## Gaps worth closing
-
-- Fetch the OAuth endpoints from the discovery document
-  (`https://developer.api.intuit.com/.well-known/openid_configuration`, and
-  `openid_sandbox_configuration` for sandbox), keeping the constants as a fallback.
-- Record the `intuit_tid` response header on `qbo.APIError`, in error logs and on
-  token-endpoint failures.
