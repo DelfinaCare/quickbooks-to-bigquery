@@ -29,6 +29,16 @@ this code. Whoever submits the questionnaire must confirm them.
 | 1 | Which API categories does your app use? | **Accounting API** only (scope `com.intuit.quickbooks.accounting`). Not Payments or Payroll. |
 | 2 | How often does your app call the APIs for each customer? | **Daily**, plus an hourly or multiple-times-a-day option if the list offers one when scrolled. The sync job runs every hour. A quiet hour costs a single CDC request per company. Every 7 days there is also a full reconciliation. |
 
+## QuickBooks Online versions and features
+
+| # | Question | Answer | Basis |
+|---|---|---|---|
+| 1 | Which customer-facing versions of QuickBooks Online is your app designed for? | **Simple Start, Essentials, Plus, Advanced** (all of them) | The app only reads data and doesn't depend on any edition's features. Each company is synced through the same Accounting API queries. |
+| 2 | Can your app handle users gaining or losing access to version-specific features? | **Yes** | Each run reads whatever the company has at that moment. A feature the company doesn't have (for example classes or purchase orders) just returns no records. Every column is nullable, so missing fields load as `NULL`. Entities sync independently, so an error on one doesn't stop the others. Records from a lost feature stay in BigQuery, and the weekly reconciling full refresh marks any that QBO no longer returns as `is_deleted`. |
+| 3 | Which of these features does your app use (verified and tested)? | **Multicurrency** and **Sales tax – US companies** **(org)**: select only the ones verified against a sandbox company with that feature turned on. | The app reads these values; it never calculates currency or tax. Multicurrency fields (`CurrencyRef`, `ExchangeRate`, `HomeTotalAmt`, `HomeBalance`) are mapped on transactions, accounts, customers and vendors. Sales tax is mapped through `TxnTaxDetail` and line `TaxCodeRef`, plus the `tax_code`, `tax_rate` and `tax_agency` tables. Non-US sales tax uses the same fields but hasn't been tested with a non-US company. |
+| 4 | Do you use webhooks? | **No** | Changes are pulled hourly instead. |
+| 5 | Do you use the CDC operation? | **Yes** | The normal hourly sync uses the `cdc` endpoint: one request per company covers all CDC-capable entities and reports deletions. If the watermark is more than 29 days old, or an entity hits CDC's 1,000-record cap, the app falls back to a full refresh (`internal/qbo/extractor.go`, `Syncer.SyncRealm`). |
+
 ## Error handling
 
 | # | Question | Answer | Basis |
@@ -46,6 +56,6 @@ this code. Whoever submits the questionnaire must confirm them.
 | 2 | Do you have a security team that regularly assesses vulnerabilities and risks? | **Yes (org)** | Must be confirmed by the submitter. In code: Dependabot is enabled (`.github/dependabot.yml`), the image is `FROM scratch` and each release ships an SPDX SBOM. |
 | 3 | Are the client ID and secret stored securely? | **Yes** | The secret lives in Google Secret Manager and is injected as an env var at runtime. It never enters Terraform state, is never hardcoded or logged, and never reaches the browser, because all token exchanges are server-side. Refresh tokens are AES-256-GCM encrypted in PostgreSQL. |
 | 4 | Does your app use multi-factor authentication? | **Yes** | The admin UI is reachable only through Google Identity-Aware Proxy (IAP) with Google Workspace accounts that have 2-step verification. **(org)**: confirm that 2SV is enforced for the members in `iap_members`. The sync job has no user login. |
-| 5 | Does your app use Captcha for authentication? | **No** | There is no public login. Access is IAP-only for a fixed allowlist. |
+| 5 | Does your app use Captcha for authentication? | **Yes** | The admin UI is behind IAP, so users sign in with Google. Google's sign-in flow puts CAPTCHA challenges in front of suspicious login attempts. The sync job has no user login. |
 | 6 | Does your app use WebSocket? | **No** | |
 | 7 | Once a customer's Intuit data is in your system, can anyone other than that customer use or see it? | **No** | The data goes only to the BigQuery dataset and GCS bucket of the organization that connected the company, and access is governed by that organization's IAM. Nothing is shared with third parties. |
