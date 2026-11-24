@@ -113,7 +113,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
       # Go embeds module versions in the binary (`go version -m qbo-bq`), so no
