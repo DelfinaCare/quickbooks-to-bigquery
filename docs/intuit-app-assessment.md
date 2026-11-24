@@ -24,10 +24,10 @@ this code. Whoever submits the questionnaire must confirm them.
 
 ## API usage
 
-| # | Question | Answer |
-|---|---|---|
-| 1 | Which API categories does your app use? | **Accounting API** only (scope `com.intuit.quickbooks.accounting`). Not Payments or Payroll. |
-| 2 | How often does your app call the APIs for each customer? | **Daily**, plus an hourly or multiple-times-a-day option if the list offers one when scrolled. The sync job runs every hour. A quiet hour costs a single CDC request per company. Every 7 days there is also a full reconciliation. |
+| # | Question | Answer | Basis |
+|---|---|---|---|
+| 1 | Which API categories does your app use? | **Accounting API** only | Scope `com.intuit.quickbooks.accounting`. Invoices, bills, payments and reports are all Accounting API. Payments API (card/ACH processing) and Payroll API are not used. |
+| 2 | How often does your app call the APIs for each customer? | **Other (please describe)**: "Hourly. A scheduled job makes one CDC request per company per hour (more only when there are many changes), plus a full re-read of each entity once a week to reconcile." | The list has no hourly option (Daily, Weekly, Monthly, Seasonally, Once only, On-demand, Other). The sync runs at `7 * * * *` (`sync_schedule`), and the weekly full re-read is `FULL_REFRESH_INTERVAL_DAYS=7`. Connecting a company also makes one `CompanyInfo` call, but that is incidental, so "On-demand" is not selected. |
 
 ## QuickBooks Online versions and features
 
