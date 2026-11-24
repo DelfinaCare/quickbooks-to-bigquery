@@ -100,7 +100,7 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-sbom
           path: qbo-bq-image.spdx.json
@@ -127,7 +127,7 @@ jobs:
               go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o "dist/qbo-bq-$os-$arch" ./cmd/qbo-bq
           done
           (cd dist && sha256sum qbo-bq-* > SHA256SUMS)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-binaries
           path: dist/*
