@@ -41,6 +41,16 @@ this code. Whoever submits the questionnaire must confirm them.
 | 5a | Why do you use the CDC operation? | **Querying specific entities doesn't give me the information I need**, plus **Other**: "We mirror the whole company into a data warehouse. A query can't show which records were deleted, and CDC reports deletions. CDC also returns changes for every entity in one request, so a quiet hourly run costs one API call per company instead of about 30 queries. We don't use webhooks: the app is a scheduled batch job with no public endpoint, and webhooks only notify us of changes, so we'd still have to fetch the records." | Deletions: CDC records with `status: Deleted` are flagged `is_deleted` (`internal/schema/mapper.go`). One call: entities that share a watermark are batched into a single `cdc` request. |
 | 5b | How often do you poll the CDC service? | **Hourly** | Cloud Scheduler runs `qbo-bq sync` every hour (`sync_schedule` default `7 * * * *` in `terraform/variables.tf`). |
 
+## QuickBooks Online versions and features
+
+| # | Question | Answer | Basis |
+|---|---|---|---|
+| 1 | Which customer-facing versions of QuickBooks Online is your app designed for? | **Simple Start, Essentials, Plus, Advanced** (all of them) | The app only reads data and doesn't depend on any edition's features. Each company is synced through the same Accounting API queries. |
+| 2 | Can your app handle users gaining or losing access to version-specific features? | **Yes** | Each run reads whatever the company has at that moment. A feature the company doesn't have (for example classes or purchase orders) just returns no records. Every column is nullable, so missing fields load as `NULL`. Entities sync independently, so an error on one doesn't stop the others. Records from a lost feature stay in BigQuery, and the weekly reconciling full refresh marks any that QBO no longer returns as `is_deleted`. |
+| 3 | Which of these features does your app use (verified and tested)? | **Multicurrency** and **Sales tax – US companies** **(org)**: select only the ones verified against a sandbox company with that feature turned on. | The app reads these values; it never calculates currency or tax. Multicurrency fields (`CurrencyRef`, `ExchangeRate`, `HomeTotalAmt`, `HomeBalance`) are mapped on transactions, accounts, customers and vendors. Sales tax is mapped through `TxnTaxDetail` and line `TaxCodeRef`, plus the `tax_code`, `tax_rate` and `tax_agency` tables. Non-US sales tax uses the same fields but hasn't been tested with a non-US company. |
+| 4 | Do you use webhooks? | **No** | Changes are pulled hourly instead. |
+| 5 | Do you use the CDC operation? | **Yes** | The normal hourly sync uses the `cdc` endpoint: one request per company covers all CDC-capable entities and reports deletions. If the watermark is more than 29 days old, or an entity hits CDC's 1,000-record cap, the app falls back to a full refresh (`internal/qbo/extractor.go`, `Syncer.SyncRealm`). |
+
 ## Error handling
 
 | # | Question | Answer | Basis |

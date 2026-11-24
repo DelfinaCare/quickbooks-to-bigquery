@@ -100,7 +100,7 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-sbom
           path: qbo-bq-image.spdx.json
@@ -113,7 +113,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
       # Go embeds module versions in the binary (`go version -m qbo-bq`), so no
@@ -127,7 +127,7 @@ jobs:
               go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o "dist/qbo-bq-$os-$arch" ./cmd/qbo-bq
           done
           (cd dist && sha256sum qbo-bq-* > SHA256SUMS)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-binaries
           path: dist/*
@@ -142,7 +142,7 @@ jobs:
     steps:
       # Only this workflow's own artifacts: build-push-action also uploads a
       # build record (*.dockerbuild) that isn't a zip and fails to download.
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-*
           path: dist
